@@ -25,12 +25,12 @@ tmux new-session -d -s watcher "bash $SCRIPT_DIR/watch_messages.sh"
 echo "[Setup] Starting Claude 1 session..."
 tmux new-session -d -s claude1 -x 200 -y 50
 sleep 0.5
-tmux send-keys -t claude1 "cd \"$PROJECT_DIR/claude1\" && PROMPT=\"\$(cat CLAUDE.md)\" && claude --dangerously-skip-permissions --model haiku --append-system-prompt \"\$PROMPT\"" C-m
+tmux send-keys -t claude1 "cd \"$PROJECT_DIR/claude1\" && claude --dangerously-skip-permissions --model haiku" C-m
 
 echo "[Setup] Starting Claude 2 session..."
 tmux new-session -d -s claude2 -x 200 -y 50
 sleep 0.5
-tmux send-keys -t claude2 "cd \"$PROJECT_DIR/claude2\" && PROMPT=\"\$(cat CLAUDE.md)\" && claude --dangerously-skip-permissions --model haiku --append-system-prompt \"\$PROMPT\"" C-m
+tmux send-keys -t claude2 "cd \"$PROJECT_DIR/claude2\" && claude --dangerously-skip-permissions --model haiku" C-m
 
 echo ""
 echo "=========================================="
