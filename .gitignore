@@ -7,9 +7,11 @@ messages/*/test.txt
 scripts/claude_wrapper.sh
 scripts/message_monitor.sh
 
-# Claude 設定ディレクトリ（不要）
-claude1/.claude/
-claude2/.claude/
+# Claude 設定ディレクトリ（instructions ファイルは追跡）
+claude1/.claude/*
+!claude1/.claude/instructions
+claude2/.claude/*
+!claude2/.claude/instructions
 
 # システムファイル
 .DS_Store
