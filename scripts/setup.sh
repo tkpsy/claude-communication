@@ -17,6 +17,10 @@ C2_TO_C1=$(jq -r '.c2_to_c1' "$CONFIG_FILE")
 echo "[Setup] Creating message directories..."
 mkdir -p "$MESSAGE_DIR/$C1_TO_C2"
 mkdir -p "$MESSAGE_DIR/$C2_TO_C1"
+mkdir -p "$MESSAGE_DIR/archive"
+
+echo "[Setup] Clearing archive..."
+rm -f "$MESSAGE_DIR/archive"/*.json 2>/dev/null || true
 
 echo "[Setup] Initializing turn state..."
 cat > "$MESSAGE_DIR/state.json" << 'STATEEOF'

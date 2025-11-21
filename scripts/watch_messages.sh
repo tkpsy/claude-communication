@@ -3,25 +3,36 @@
 # 絶対パスを取得
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-CONFIG_FILE="$PROJECT_DIR/config.json"
 
-# config.json の message_dir が相対パスの場合は PROJECT_DIR を基準にする
-MESSAGE_DIR=$(jq -r '.message_dir' "$CONFIG_FILE")
-if [[ ! "$MESSAGE_DIR" = /* ]]; then
-  MESSAGE_DIR="$PROJECT_DIR/$MESSAGE_DIR"
+# SESSION_ID が環境変数で渡される（必須）
+if [ -z "$SESSION_ID" ]; then
+  echo "[Watcher] ERROR: SESSION_ID environment variable is required"
+  exit 1
 fi
-# パスを正規化（./ を削除）
-MESSAGE_DIR=$(cd "$MESSAGE_DIR" && pwd)
+
+# セッションディレクトリを設定
+SESSION_DIR="$PROJECT_DIR/messages/sessions/$SESSION_ID"
 CLAUDE1_SESSION="claude1"
 CLAUDE2_SESSION="claude2"
-C1_TO_C2=$(jq -r '.c1_to_c2' "$CONFIG_FILE")
-C2_TO_C1=$(jq -r '.c2_to_c1' "$CONFIG_FILE")
 
-C1_TO_C2_DIR="$MESSAGE_DIR/$C1_TO_C2"
-C2_TO_C1_DIR="$MESSAGE_DIR/$C2_TO_C1"
-STATE_FILE="$MESSAGE_DIR/state.json"
+# Claude agents write to global directories
+C1_TO_C2_DIR="$PROJECT_DIR/messages/c1_to_c2"
+C2_TO_C1_DIR="$PROJECT_DIR/messages/c2_to_c1"
 
-echo "[Watcher] Started watching messages with ID-based turn management..."
+# Session-specific state and archive
+STATE_FILE="$SESSION_DIR/state.json"
+ARCHIVE_DIR="$SESSION_DIR/archive"
+
+# ディレクトリ存在確認
+if [ ! -d "$SESSION_DIR" ]; then
+  echo "[Watcher] ERROR: Session directory not found: $SESSION_DIR"
+  exit 1
+fi
+
+# Ensure global message directories exist
+mkdir -p "$C1_TO_C2_DIR" "$C2_TO_C1_DIR"
+
+echo "[Watcher] Started watching session: $SESSION_ID"
 
 # メッセージにIDを付与して処理する
 process_messages() {
@@ -106,8 +117,31 @@ process_messages() {
 
       if [ -n "$content" ]; then
         echo "[Watcher] ✓ Sending to $target_session (ID: $msg_id): $content"
+
+        # 送信者と受信者を取得
+        sender=$(jq -r '.sender' "$json_file" 2>/dev/null || echo "unknown")
+
+        # 受信者のエージェント名を決定
+        if [ "$target_session" = "claude1" ]; then
+          reply_sender="claude1"
+          reply_receiver="claude2"
+          reply_dir="c1_to_c2"
+        else
+          reply_sender="claude2"
+          reply_receiver="claude1"
+          reply_dir="c2_to_c1"
+        fi
+
+        # メッセージ本文を構築
+        message="【${sender}からのメッセージ (${msg_id})】
+${content}
+
+---
+返信するには、Bashツールで以下を実行してください：
+jq -n --arg timestamp \"\$(date -Iseconds)\" --arg sender \"${reply_sender}\" --arg receiver \"${reply_receiver}\" --arg content \"ここに返信内容\" '{timestamp: \$timestamp, sender: \$sender, receiver: \$receiver, content: \$content, type: \"message\"}' > ../messages/${reply_dir}/msg_\$(date +%s%N).json"
+
         # tmux send-keysでメッセージを送信
-        tmux send-keys -t "$target_session" "$content"
+        tmux send-keys -t "$target_session" "$message"
         sleep 0.2
         tmux send-keys -t "$target_session" C-m
 
@@ -122,8 +156,8 @@ process_messages() {
         echo "[Watcher] Turn switched to: $next_turn | Last message ID: $msg_id | Waiting for reply to: $msg_id"
       fi
 
-      # ファイルを削除
-      rm -f "$json_file"
+      # ファイルをアーカイブに移動
+      mv "$json_file" "$ARCHIVE_DIR/"
     fi
   done
 }

@@ -22,6 +22,9 @@ claude2/.claude/*
 node_modules/
 package-lock.json
 
+# Next.js build
+.next/
+
 # IDE
 .vscode/
 .idea/
