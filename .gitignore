@@ -1,5 +1,5 @@
 # メッセージファイルとシステムファイル（実行時に生成）
-messages/
+/messages/
 
 # 試行版スクリプト
 scripts/claude_wrapper.sh
