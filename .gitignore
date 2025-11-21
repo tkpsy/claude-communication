@@ -1,0 +1,28 @@
+# メッセージファイル（実行時に生成）
+messages/c1_to_c2/*.json
+messages/c2_to_c1/*.json
+messages/*/test.txt
+
+# 試行版スクリプト
+scripts/claude_wrapper.sh
+scripts/message_monitor.sh
+
+# Claude 設定ディレクトリ（不要）
+claude1/.claude/
+claude2/.claude/
+
+# システムファイル
+.DS_Store
+*.log
+*.swp
+*.swo
+*~
+
+# Node/npm
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
