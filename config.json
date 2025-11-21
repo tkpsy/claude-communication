@@ -1,9 +1,5 @@
 {
   "message_dir": "./messages",
   "c1_to_c2": "c1_to_c2",
-  "c2_to_c1": "c2_to_c1",
-  "tmux_session": "multi-agent",
-  "claude1_window": "claude1",
-  "claude2_window": "claude2",
-  "poll_interval": 1
+  "c2_to_c1": "c2_to_c1"
 }

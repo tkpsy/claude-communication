@@ -21,6 +21,7 @@
 - Claude Code
 - tmux
 - jq
+- fswatch
 ```
 
 ### 実行
@@ -133,8 +134,7 @@ bash scripts/setup.sh
 {
   "message_dir": "./messages",
   "c1_to_c2": "c1_to_c2",
-  "c2_to_c1": "c2_to_c1",
-  "poll_interval": 1
+  "c2_to_c1": "c2_to_c1"
 }
 ```
 
