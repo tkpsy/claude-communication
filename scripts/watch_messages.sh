@@ -20,33 +20,6 @@ C2_TO_C1_DIR="$MESSAGE_DIR/$C2_TO_C1"
 
 echo "[Watcher] Started watching messages..."
 
-# fswatch が利用可能か確認、なければ簡易版を使う
-if command -v fswatch &> /dev/null; then
-  watch_with_fswatch() {
-    local dir=$1
-    local callback=$2
-    fswatch -0 "$dir" | while read -d '' event; do
-      "$callback" "$dir"
-    done
-  }
-else
-  # fswatch がない場合は定期的にポーリング
-  watch_with_polling() {
-    local dir=$1
-    local callback=$2
-    local last_files=""
-
-    while true; do
-      local current_files=$(find "$dir" -type f -name "*.json" | sort)
-      if [ "$current_files" != "$last_files" ]; then
-        "$callback" "$dir"
-        last_files="$current_files"
-      fi
-      sleep "$POLL_INTERVAL"
-    done
-  }
-fi
-
 process_messages() {
   local dir=$1
   local target_session=$2
@@ -82,26 +55,9 @@ process_c2_to_c1() {
   process_messages "$C2_TO_C1_DIR" "$CLAUDE1_SESSION"
 }
 
-# メインループ
-if command -v fswatch &> /dev/null; then
-  # fswatch でマルチディレクトリ監視
-  (
-    fswatch -0 "$C1_TO_C2_DIR" "$C2_TO_C1_DIR" | while read -d '' event; do
-      if [[ "$event" == *"$C1_TO_C2_DIR"* ]]; then
-        process_c1_to_c2
-      elif [[ "$event" == *"$C2_TO_C1_DIR"* ]]; then
-        process_c2_to_c1
-      fi
-    done
-  ) &
-
-  # スレッド終了まで待機
-  wait
-else
-  # ポーリングで監視
-  while true; do
-    process_c1_to_c2
-    process_c2_to_c1
-    sleep "$POLL_INTERVAL"
-  done
-fi
+# メインループ（ポーリング方式で統一）
+while true; do
+  process_c1_to_c2
+  process_c2_to_c1
+  sleep "$POLL_INTERVAL"
+done
