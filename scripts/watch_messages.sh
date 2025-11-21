@@ -16,7 +16,6 @@ CLAUDE1_SESSION="claude1"
 CLAUDE2_SESSION="claude2"
 C1_TO_C2=$(jq -r '.c1_to_c2' "$CONFIG_FILE")
 C2_TO_C1=$(jq -r '.c2_to_c1' "$CONFIG_FILE")
-POLL_INTERVAL=$(jq -r '.poll_interval' "$CONFIG_FILE")
 
 C1_TO_C2_DIR="$MESSAGE_DIR/$C1_TO_C2"
 C2_TO_C1_DIR="$MESSAGE_DIR/$C2_TO_C1"
@@ -58,18 +57,9 @@ process_c2_to_c1() {
   process_messages "$C2_TO_C1_DIR" "$CLAUDE1_SESSION"
 }
 
-# メインループ（fswatch でイベント駆動）
-if command -v fswatch &> /dev/null; then
-  fswatch -0 "$C1_TO_C2_DIR" "$C2_TO_C1_DIR" | while read -d '' event; do
-    # イベント検知したら両方チェック
-    process_c1_to_c2
-    process_c2_to_c1
-  done
-else
-  # fswatch がない場合はポーリング
-  while true; do
-    process_c1_to_c2
-    process_c2_to_c1
-    sleep "$POLL_INTERVAL"
-  done
-fi
+# fswatch 必須（ポーリング廃止）
+fswatch -0 "$C1_TO_C2_DIR" "$C2_TO_C1_DIR" | while read -d '' event; do
+  # イベント検知したら両方チェック
+  process_c1_to_c2
+  process_c2_to_c1
+done
