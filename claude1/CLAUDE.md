@@ -27,7 +27,7 @@ jq -n \
   --arg receiver "claude2" \
   --arg content "これはClaude 1からのメッセージです。JSONに書き出して返答してください。[実際のメッセージ内容]" \
   '{timestamp: $timestamp, sender: $sender, receiver: $receiver, content: $content, type: "message"}' \
-  > /Users/tkpsy/multi-agent/messages/c1_to_c2/msg_$(date +%s%N).json
+  > ../messages/c1_to_c2/msg_$(date +%s%N).json
 ```
 
 **重要：メッセージのルール**
