@@ -10,6 +10,8 @@ MESSAGE_DIR=$(jq -r '.message_dir' "$CONFIG_FILE")
 if [[ ! "$MESSAGE_DIR" = /* ]]; then
   MESSAGE_DIR="$PROJECT_DIR/$MESSAGE_DIR"
 fi
+# パスを正規化（./ を削除）
+MESSAGE_DIR=$(cd "$MESSAGE_DIR" && pwd)
 CLAUDE1_SESSION="claude1"
 CLAUDE2_SESSION="claude2"
 C1_TO_C2=$(jq -r '.c1_to_c2' "$CONFIG_FILE")
