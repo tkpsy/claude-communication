@@ -25,23 +25,21 @@ tmux new-session -d -s watcher "bash $SCRIPT_DIR/watch_messages.sh"
 echo "[Setup] Starting Claude 1 session..."
 tmux new-session -d -s claude1 -x 200 -y 50
 sleep 0.5
-cat > /tmp/claude1_start.sh << 'EOF'
+cat > /tmp/claude1_start.sh << EOF
 cd "$PROJECT_DIR/claude1"
-PROMPT=$(cat CLAUDE.md)
-claude --dangerously-skip-permissions --model haiku --append-system-prompt "$PROMPT"
+PROMPT=\$(cat CLAUDE.md)
+claude --dangerously-skip-permissions --model haiku --append-system-prompt "\$PROMPT"
 EOF
-sed -i '' "s|\$PROJECT_DIR|$PROJECT_DIR|g" /tmp/claude1_start.sh
 tmux send-keys -t claude1 "bash /tmp/claude1_start.sh" C-m
 
 echo "[Setup] Starting Claude 2 session..."
 tmux new-session -d -s claude2 -x 200 -y 50
 sleep 0.5
-cat > /tmp/claude2_start.sh << 'EOF'
+cat > /tmp/claude2_start.sh << EOF
 cd "$PROJECT_DIR/claude2"
-PROMPT=$(cat CLAUDE.md)
-claude --dangerously-skip-permissions --model haiku --append-system-prompt "$PROMPT"
+PROMPT=\$(cat CLAUDE.md)
+claude --dangerously-skip-permissions --model haiku --append-system-prompt "\$PROMPT"
 EOF
-sed -i '' "s|\$PROJECT_DIR|$PROJECT_DIR|g" /tmp/claude2_start.sh
 tmux send-keys -t claude2 "bash /tmp/claude2_start.sh" C-m
 
 echo ""
