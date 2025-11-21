@@ -60,15 +60,46 @@ tmux attach-session -t claude2
 
 ## 仕組み
 
+### ターン管理による交互通信
+
+このシステムは **構造的な制約** により、Claude1 と Claude2 が必ず交互に会話することを保証します。
+
+**状態管理ファイル** (`messages/state.json`)：
+
+```json
+{
+  "current_turn": "claude1",
+  "last_message_id": "msg_0001",
+  "message_counter": 1,
+  "pending_reply_to": "msg_0001"
+}
+```
+
+- **`current_turn`**: 現在のターンのエージェント (`"claude1"` or `"claude2"`)
+- **`message_counter`**: メッセージID生成用のカウンター
+- **`last_message_id`**: 最後に送信されたメッセージのID (`msg_0001`, `msg_0002`, ...)
+- **`pending_reply_to`**: 返答待ちのメッセージID。次のエージェントのメッセージはこれに返答する必要がある
+
 ### メッセージの流れ
 
-1. Claude A が jq コマンドを実行して JSON ファイルを作成
-2. watcher が JSON ファイルを検出
-3. JSON から内容を抽出
-4. tmux send-keys で Claude B のセッションに入力
-5. Claude B がメッセージを受け取る
+1. Claude が JSON ファイルを作成（`reply_to` フィールドは指定しない）
+2. Watcher が JSON ファイルを検出
+3. Watcher がターンをチェック：
+   - `current_turn` がこのエージェントのターンでない場合は **スキップ**（ターン到来まで保持）
+   - ターンが正しければ続行
+4. Watcher が自動的に `reply_to` フィールドを追加：
+   - 新規メッセージの場合：`reply_to: null`
+   - 返答メッセージの場合：`reply_to: pending_reply_to` の値を使用
+5. Watcher がメッセージID を割り当て：`msg_0001`, `msg_0002`, ...
+6. Watcher が `state.json` を更新：
+   - `current_turn` をもう一方のエージェントに切り替え
+   - `pending_reply_to` を新たに送信したメッセージIDに設定
+   - `message_counter` をインクリメント
+7. Watcher が tmux send-keys でメッセージを相手のセッションに送信
 
 ### メッセージフォーマット
+
+Claude が作成するメッセージ（`reply_to` 不要）：
 
 ```json
 {
@@ -79,6 +110,11 @@ tmux attach-session -t claude2
   "type": "message"
 }
 ```
+
+Watcher が自動追加するフィールド：
+
+- **`reply_to`**: 返答対象のメッセージID（新規なら `null`、返答なら対象のID）
+- **`id`**: メッセージの一意識別子（Watcher が自動生成）
 
 ---
 
@@ -118,11 +154,35 @@ bash scripts/setup.sh
    tmux attach-session -t watcher
    ```
 
-2. メッセージファイルが生成されているか確認
+2. 現在のターンを確認
+   ```bash
+   cat messages/state.json | jq .
+   ```
+   - `current_turn` が "claude1" なら Claude1 のターン
+   - `pending_reply_to` がメッセージIDなら、それに返答する必要がある
+
+3. メッセージファイルが生成されているか確認
    ```bash
    ls messages/c1_to_c2/
    ls messages/c2_to_c1/
    ```
+
+### メッセージが保持されている（ターン待機中）
+
+ターン管理の仕様として、ターンでないエージェントのメッセージは自動的に保持されます。
+
+例：
+- Claude1 がメッセージを送信
+- watcher が処理し、`current_turn` を "claude2" に変更
+- Claude2 のターン中に Claude1 がメッセージを送信した場合 → **スキップされ保持される**
+- Claude2 がメッセージを送信・処理されると、`current_turn` が "claude1" に戻る
+- 保持されていた Claude1 のメッセージが自動的に処理される（fswatch により再検知）
+
+### reply_to フィールドについて
+
+- **Claude が記述する必要なし** - Watcher が自動管理します
+- Claude が `reply_to` を含めても、Watcher が `pending_reply_to` で上書きします
+- 新規メッセージ時は `reply_to: null`、返答時は対象メッセージIDを自動設定
 
 ---
 

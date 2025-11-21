@@ -1,7 +1,5 @@
-# メッセージファイル（実行時に生成）
-messages/c1_to_c2/*.json
-messages/c2_to_c1/*.json
-messages/*/test.txt
+# メッセージファイルとシステムファイル（実行時に生成）
+messages/
 
 # 試行版スクリプト
 scripts/claude_wrapper.sh

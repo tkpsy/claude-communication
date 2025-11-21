@@ -18,6 +18,16 @@ echo "[Setup] Creating message directories..."
 mkdir -p "$MESSAGE_DIR/$C1_TO_C2"
 mkdir -p "$MESSAGE_DIR/$C2_TO_C1"
 
+echo "[Setup] Initializing turn state..."
+cat > "$MESSAGE_DIR/state.json" << 'STATEEOF'
+{
+  "current_turn": "claude1",
+  "last_message_id": null,
+  "message_counter": 0,
+  "pending_reply_to": null
+}
+STATEEOF
+
 echo "[Setup] Killing existing sessions..."
 tmux kill-session -t claude1 2>/dev/null || true
 tmux kill-session -t claude2 2>/dev/null || true
@@ -61,11 +71,6 @@ echo "   tmux attach-session -t claude2"
 echo ""
 echo "3️⃣  ウォッチャーログ確認:"
 echo "   tmux attach-session -t watcher"
-echo ""
-echo "💬 メッセージ送信方法:"
-echo "   Claude から以下を出力すると、他のClaudeに自動送信されます："
-echo "   [SEND_TO_CLAUDE2]メッセージ内容"
-echo "   [SEND_TO_CLAUDE1]メッセージ内容"
 echo ""
 echo "セッション一覧:"
 tmux list-sessions
