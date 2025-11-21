@@ -1,21 +1,52 @@
-# Multi-Agent Claude Communication System
+# claude-communication
 
-2つの独立した Claude プロセス（Claude A と Claude B）を tmux で起動し、JSON メッセージを介して通信するシステムです。
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
 
-## クイックスタート
+> **複数の Claude エージェントが JSON で自動通信する。**
+> エージェント間協力作業をシンプルに実装できるシステム。
+
+---
+
+## ✨ 何ができるのか
+
+このプロジェクトは、**複数の独立した Claude AI エージェントを tmux で起動し、JSON メッセージを介して自動で通信させる** システムです。
+
+### 主な特徴
+
+- **簡単セットアップ** - `bash scripts/setup.sh` で即座に2つの Claude エージェントが起動
+- **自動通信** - エージェント間の JSON メッセージを自動検出・配信
+- **シンプル設計** - ファイルシステムベースで複雑な依存関係なし
+- **拡張可能** - エージェント数を増やすのは簡単
+- **デバッグ容易** - JSON ファイルで通信内容が可視化される
+
+---
+
+## 🚀 今すぐ始める（Getting Started）
+
+### 前提条件
+
+```
+- macOS または Linux
+- Claude CLI がインストール済み
+- tmux がインストール済み
+- jq がインストール済み
+```
 
 ### セットアップ（最初に1回）
 
 ```bash
+git clone https://github.com/tkpsy/claude-communication.git
+cd claude-communication
 bash scripts/setup.sh
 ```
 
-この1つのコマンドで：
-- ✅ `claude1` セッション起動（Claude A）
-- ✅ `claude2` セッション起動（Claude B）
-- ✅ `watcher` セッション起動（メッセージ監視）
+このコマンドで：
+- ✅ Claude Agent A（`claude1` セッション）が起動
+- ✅ Claude Agent B（`claude2` セッション）が起動
+- ✅ メッセージ監視エンジン（`watcher` セッション）が起動
 
-### 使用（毎回）
+### 使用開始（毎回）
 
 **ターミナル1：Claude A に接続**
 ```bash
@@ -27,111 +58,149 @@ tmux attach-session -t claude1
 tmux attach-session -t claude2
 ```
 
-以上です。あとは通常通り Claude と会話できます。
+あとは通常通り Claude と会話できます。メッセージはエージェント間で自動送信されます。
 
 ---
 
-## メッセージ送信の仕組み
+## 💡 実例：何が起きるのか
 
-### 基本フロー
+### Claude A が Claude B にメッセージを送信する流れ
 
-```
-Claude A が JSON ファイルを保存
-         ↓
-    fswatch が検出
-         ↓
-watch_messages.sh が処理
-         ↓
-tmux send-keys で Claude B に送信
-         ↓
-Claude B のプロンプトに自動入力
-```
+1. Claude A が以下のコマンドを実行
+   ```bash
+   jq -n \
+     --arg timestamp "$(date -Iseconds)" \
+     --arg sender "claude1" \
+     --arg receiver "claude2" \
+     --arg content "これはClaude 1からのメッセージです。jqのコマンドをBashツールで実行してJSONに書き出し、返答してください。テストです" \
+     '{timestamp: $timestamp, sender: $sender, receiver: $receiver, content: $content, type: "message"}' \
+     > ./messages/c1_to_c2/msg_$(date +%s%N).json
+   ```
 
-### 具体例：Claude 1 → Claude 2
+2. ファイルが作成される
+   ```json
+   {
+     "timestamp": "2025-11-21T18:00:00+09:00",
+     "sender": "claude1",
+     "receiver": "claude2",
+     "content": "これはClaude 1からのメッセージです。jqのコマンドをBashツールで実行してJSONに書き出し、返答してください。テストです",
+     "type": "message"
+   }
+   ```
 
-Claude 1 がこのコマンドを実行：
+3. watcher が検出し、Claude B のプロンプトに自動入力
+   ```
+   > これはClaude 1からのメッセージです。jqのコマンドをBashツールで実行してJSONに書き出し、返答してください。テストです
+   ```
 
-```bash
-jq -n \
-  --arg timestamp "$(date -Iseconds)" \
-  --arg sender "claude1" \
-  --arg receiver "claude2" \
-  --arg content "こんにちは、Claude 2！" \
-  '{timestamp: $timestamp, sender: $sender, receiver: $receiver, content: $content, type: "message"}' \
-  > /Users/tkpsy/multi-agent/messages/c1_to_c2/msg_$(date +%s%N).json
-```
-
-すると自動的に Claude 2 のプロンプトに `こんにちは、Claude 2！` が送信されます。
+4. Claude B が同様の jq コマンドで返答を送信
 
 ---
 
-## ファイル構造
+## ❓ なぜこのシステムを使うのか
+
+### 既存の方法との違い
+
+| 方法 | メリット | デメリット |
+|------|---------|----------|
+| **REST API 統合** | リアルタイム通信 | ネットワーク管理が複雑 |
+| **メッセージキュー** | スケーラブル | セットアップが複雑 |
+| **このシステム** | シンプル、デバッグ容易 | ローカル用途向け |
+
+### 向いている用途
+
+✅ **こんな時に使う：**
+- エージェント間協力作業の実験
+- マルチエージェント AI のプロトタイピング
+- ローカル開発環境でのテスト
+- AI エージェント動作の可視化・デバッグ
+
+❌ **こんな時には向かない：**
+- 本番環境での高負荷運用
+- リモートサーバー間の通信
+- リアルタイム性が重要な用途
+
+---
+
+## 📁 プロジェクト構成
 
 ```
-/Users/tkpsy/multi-agent/
-├── README.md                   # このファイル
-├── CLAUDE.md                   # 詳細な仕組みドキュメント
-├── config.json                 # 設定ファイル
-├── messages/                   # メッセージファイル格納先
-│   ├── c1_to_c2/              # Claude 1 → Claude 2
-│   └── c2_to_c1/              # Claude 2 → Claude 1
+claude-communication/
+├── README.md                    # このファイル
+├── config.json                  # 設定ファイル
+├── messages/                    # メッセージファイル
+│   ├── c1_to_c2/               # Claude 1 → Claude 2
+│   └── c2_to_c1/               # Claude 2 → Claude 1
+├── claude1/
+│   └── CLAUDE.md               # Claude 1 の役割・指示
+├── claude2/
+│   └── CLAUDE.md               # Claude 2 の役割・指示
 └── scripts/
-    ├── setup.sh               # セットアップスクリプト
-    ├── watch_messages.sh      # ファイル監視エンジン
-    └── message_monitor.sh     # メッセージモニタ（参考）
+    ├── setup.sh                # セットアップスクリプト
+    └── watch_messages.sh       # メッセージ監視エンジン
 ```
 
 ---
 
-## ドキュメント
+## ⚙️ 設定
 
-- **[CLAUDE.md](./CLAUDE.md)** ← **詳しい仕組みはこちらを読んでください**
-  - JSON メッセージフォーマット
-  - ファイル命名規則
-  - トラブルシューティング
-  - セキュリティに関する注意
-
----
-
-## 設定
-
-`config.json` で以下を変更可能：
+`config.json` で動作をカスタマイズ可能：
 
 ```json
 {
-  "message_dir": "/Users/tkpsy/multi-agent/messages",
-  "c1_to_c2": "c1_to_c2",
-  "c2_to_c1": "c2_to_c1",
-  "tmux_session": "multi-agent",
-  "claude1_window": "claude1",
-  "claude2_window": "claude2",
-  "poll_interval": 1
+  "message_dir": "./messages",    # メッセージ格納ディレクトリ
+  "c1_to_c2": "c1_to_c2",        # Claude 1→2 のメッセージフォルダ
+  "c2_to_c1": "c2_to_c1",        # Claude 2→1 のメッセージフォルダ
+  "poll_interval": 1              # 監視のポーリング間隔（秒）
 }
 ```
 
 ---
 
-## トラブルシューティング
+## 🔧 トラブルシューティング
 
-### 全セッションをリセット
+### セッションをリセットしたい
 ```bash
 tmux kill-server
-bash /Users/tkpsy/multi-agent/scripts/setup.sh
+bash scripts/setup.sh
 ```
 
 ### メッセージが送信されない場合
-1. JSON ファイルが正しく保存されているか確認
-2. watcher セッションのログを確認：`tmux attach-session -t watcher`
-3. 詳細は [CLAUDE.md](./CLAUDE.md) のトラブルシューティングを参照
+1. watcher セッションが動いているか確認
+   ```bash
+   tmux attach-session -t watcher
+   ```
 
-### fswatch をインストール（オプション）
-```bash
-brew install fswatch
-```
-（fswatch なしでもポーリングで動作します）
+2. メッセージファイルが生成されているか確認
+   ```bash
+   ls -la messages/c1_to_c2/
+   ls -la messages/c2_to_c1/
+   ```
+
+3. JSON フォーマットが正しいか確認
 
 ---
 
-## 次のステップ
+## 📚 詳細情報
 
-詳細な仕組みや使用方法は [CLAUDE.md](./CLAUDE.md) を参照してください。
+- **claude1/CLAUDE.md** - Claude Agent A の詳細な役割と仕様
+- **claude2/CLAUDE.md** - Claude Agent B の詳細な役割と仕様
+
+---
+
+## 🤝 貢献について
+
+バグ報告や機能提案は Issue で受け付けています。
+Pull Request も大歓迎です。
+
+---
+
+## 📜 ライセンス
+
+MIT License - 詳細は [LICENSE](./LICENSE) を参照
+
+---
+
+## 💬 Feedback
+
+このプロジェクトについてのご意見・ご質問は、Issues で気軽にお知らせください。
