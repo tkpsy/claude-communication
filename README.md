@@ -18,7 +18,7 @@
 
 ```
 - macOS または Linux
-- Claude CLI
+- Claude Code
 - tmux
 - jq
 ```
