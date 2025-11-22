@@ -1,14 +1,20 @@
 # 🚀 AI Idea Evaluation System
 
-アプリ開発アイデアの提案と審査を自動化するAI対話システム
+2025年版モバイルユーティリティアプリの提案と審査を自動化するAI対話システム
 
 ## 🎯 概要
 
-2つのAIが協力してアプリ開発のアイデアを生み出し、洗練させていくシステムです。
+2つのAIが協力して**個人開発で収益化可能なモバイルユーティリティアプリ**のアイデアを生み出し、洗練させていくシステムです。
 
-- **Proposer AI（提案AI）**: 革新的なアプリアイデアを生成
-- **Reviewer AI（審査AI）**: 厳格な基準でアイデアを評価・フィードバック
-- **Watcher**: ワークフロー を自動管理
+- **Proposer AI（提案AI）**: iOS 18時代の単機能特化アプリアイデアを生成
+- **Reviewer AI（審査AI）**: 100点満点の厳格な基準で評価・フィードバック
+- **Watcher**: ワークフロー を自動管理（提案→評価→改善→承認/却下）
+
+**特徴:**
+- モバイルアプリに特化した実践的な評価基準
+- 個人開発スコープを厳格にチェック
+- TikTok時代のマーケティング適性を重視
+- 80点以上で承認される高い合格ライン
 
 ## 🏗️ システム構成
 
@@ -36,32 +42,44 @@ scripts/
 
 ```
 1. Proposer AI
-   ↓ アイデアを提案（proposals/idea.json）
+   ↓ モバイルアプリアイデアを提案（proposals/idea.json）
 
 2. Reviewer AI
-   ↓ 5つの観点で評価（reviews/review.json）
+   ↓ 10項目で厳格評価（reviews/review.json）
 
 3. Watcher が判定
-   ├─ 40点以上 → approved/ に保存 → 次のアイデア生成
-   ├─ 25-39点 → フィードバック送信 → Proposer が改善
-   └─ 24点以下 → rejected/ に保存 → 新アイデア生成
+   ├─ 80点以上 → approved/ に保存 → 次のアイデア生成
+   ├─ 60-79点 → フィードバック送信 → Proposer が改善
+   ├─ 40-59点 → 厳しいフィードバック → 根本的見直し
+   └─ 39点以下 → rejected/ に保存 → 新アイデア生成
 ```
 
-## 📊 評価基準
+## 📊 評価基準（100点満点）
 
-各項目10点満点、合計50点満点で評価：
+**2025年版モバイルユーティリティアプリ評価シート**を採用
 
-1. **革新性 (Innovation)**: 新しい視点・アプローチ
-2. **実用性 (Practicality)**: 実際に使われる可能性
-3. **技術的実現性 (Technical Feasibility)**: 実装の現実性
-4. **市場性 (Market Potential)**: ビジネスモデルの妥当性
-5. **スケーラビリティ (Scalability)**: 成長・拡大の可能性
+### 1. 市場性・課題の鋭さ (30点)
+- 単機能特化・アンバンドリング (10点)
+- ペインポイントの明確性 (10点)
+- ASA検索ボリューム (10点)
+
+### 2. 実現可能性と体験価値 (30点)
+- iOS 18 / OSネイティブ親和性 (10点)
+- 解決速度とシンプルさ (10点)
+- 開発スコープの実現性 (10点)
+
+### 3. マーケティング・収益化ポテンシャル (40点)
+- TikTok / UGC適性 (10点)
+- オンボーディング・課金設計 (10点)
+- シェア誘発性 (10点)
+- オーガニック・アップリフト期待値 (10点)
 
 ### 判定基準
 
-- ✅ **承認 (APPROVED)**: 40点以上
-- 🔄 **改善要求 (NEEDS_IMPROVEMENT)**: 25-39点
-- ❌ **却下 (REJECTED)**: 24点以下
+- ✅ **即時実行 (APPROVED)**: 80点以上 - Goサイン、MVP開発開始
+- 🔄 **要改善 (NEEDS_IMPROVEMENT)**: 60-79点 - 条件付きGo
+- ⚠️ **保留 (NEEDS_IMPROVEMENT)**: 40-59点 - リサーチに戻る
+- ❌ **却下 (REJECTED)**: 39点以下 - 収益化困難または開発難易度高すぎ
 
 ## 🚀 使い方
 
@@ -119,18 +137,57 @@ bash scripts/stop_idea_system.sh
 ```json
 {
   "id": "idea_20241122_140530",
-  "title": "AI家庭教師アプリ",
-  "problem": "個別指導の費用が高く、学習者が…",
-  "solution": "AIによる24時間対応の個別指導…",
-  "target_users": "小中高生とその保護者…",
-  "unique_value": "学習履歴から最適な問題を自動生成…",
-  "business_model": "月額サブスクリプション…",
-  "tech_stack": ["Next.js", "Claude API", "PostgreSQL"],
-  "features": [
-    "AI対話型学習",
-    "進捗可視化ダッシュボード",
-    "保護者向けレポート"
+  "title": "QuickRemove - 背景削除アプリ",
+  "tagline": "1タップで背景削除",
+  "category": "写真/ビデオ",
+
+  "pain_point": {
+    "description": "インスタ投稿のために背景を削除したいが、Photoshopは複雑で時間がかかりすぎる",
+    "target_user": "SNSに毎日投稿するクリエイター・インフルエンサー",
+    "frequency": "毎日3-5枚の写真を加工"
+  },
+
+  "solution": {
+    "core_feature": "AIによる自動背景削除（タップ1回）",
+    "steps_to_solve": "1. 写真選択 2. タップ 3. 保存 - 計3タップで完了",
+    "time_saved": "Photoshopの5分 → QuickRemoveで10秒（1/30の時間）"
+  },
+
+  "ios_native": {
+    "widget": "ウィジェットから直接起動、カメラロールの最新写真を自動処理",
+    "control_center": "コントロールセンターに配置、即座に起動",
+    "shortcuts": "ショートカットで一括処理が可能"
+  },
+
+  "monetization": {
+    "free_features": "1日3枚まで無料で背景削除",
+    "paid_features": "無制限処理 + 高解像度出力 + 透過PNG保存",
+    "price": "月額480円 または 買い切り1,200円"
+  },
+
+  "marketing": {
+    "search_keywords": ["背景削除", "背景透過", "切り抜き"],
+    "tiktok_hook": "ごちゃごちゃした背景の写真が1タップで綺麗に",
+    "share_trigger": "処理前後のBefore/After画像を自動生成、SNSシェアボタン"
+  },
+
+  "tech_feasibility": {
+    "dev_period": "3ヶ月",
+    "tech_stack": ["Swift", "Core ML", "Vision API", "CloudKit"],
+    "backend_needed": "不要（全てデバイス上で処理）"
+  },
+
+  "competitors": [
+    {
+      "name": "Remove.bg",
+      "weakness": "Web版のみ、アプリ版は英語で使いづらい"
+    },
+    {
+      "name": "Photoshop Express",
+      "weakness": "高機能すぎて初心者には複雑"
+    }
   ],
+
   "iteration": 2,
   "created_at": "2024-11-22T14:05:30Z"
 }
@@ -142,24 +199,33 @@ bash scripts/stop_idea_system.sh
 {
   "idea_id": "idea_20241122_140530",
   "scores": {
-    "innovation": 8,
-    "practicality": 9,
-    "technical_feasibility": 8,
-    "market_potential": 9,
-    "scalability": 8
+    "single_function_focus": 9,
+    "pain_point_clarity": 8,
+    "search_intent": 7,
+    "ios_native_affinity": 9,
+    "solution_speed": 8,
+    "dev_scope_feasibility": 9,
+    "tiktok_ugc_fit": 8,
+    "onboarding_monetization": 8,
+    "viral_loop": 7,
+    "organic_uplift": 8
   },
-  "total_score": 42,
+  "total_score": 81,
   "status": "APPROVED",
+  "grade": "S",
   "feedback": {
     "strengths": [
-      "明確なニーズがある市場",
-      "収益モデルが明確"
+      "単機能特化で使いやすい",
+      "個人開発で3ヶ月で完成可能",
+      "iOS 18のウィジェットと相性抜群"
     ],
     "weaknesses": [
-      "競合との差別化がやや弱い"
+      "検索キーワードがやや弱い",
+      "シェア機能の工夫が必要"
     ],
     "suggestions": [
-      "独自の学習アルゴリズムを強調"
+      "ASAで狙える具体的なキーワードを追加",
+      "結果画面をSNSでシェアしたくなる要素を強化"
     ]
   },
   "reviewed_at": "2024-11-22T14:10:45Z",

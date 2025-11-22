@@ -65,7 +65,8 @@ request_improvement() {
     local weaknesses=$(jq -r '.feedback.weaknesses | join("\n- ")' "$review_file")
     local score=$(jq -r '.total_score' "$review_file")
 
-    local message="審査結果: ${score}点/50点
+    local grade=$(jq -r '.grade' "$review_file")
+    local message="審査結果: ${score}点/100点 (判定: ${grade})
 
 【強み】
 - $strengths
@@ -76,7 +77,8 @@ request_improvement() {
 【改善提案】
 - $feedback
 
-これらのフィードバックを元に、アイデアを改善して ../ideas/proposals/idea.json を更新してください。"
+これらのフィードバックを元に、特に弱みの項目を重点的に改善して ../ideas/proposals/idea.json を更新してください。
+※80点以上で承認されます。"
 
     if check_session "proposer"; then
         send_to_tmux "proposer" "$message"
