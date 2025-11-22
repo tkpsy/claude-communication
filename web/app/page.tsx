@@ -194,6 +194,12 @@ export default function Home() {
         <div className="p-4 border-b border-gray-700">
           <h1 className="text-lg font-bold">Claude Monitor</h1>
           <p className="text-xs text-gray-500 mt-1">AI同士の会話を監視</p>
+          <a
+            href="/ideas"
+            className="mt-3 block text-center px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm transition-colors"
+          >
+            💡 Idea System
+          </a>
         </div>
 
         {/* Running Session Info */}
