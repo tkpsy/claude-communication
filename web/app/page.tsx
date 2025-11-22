@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface Message {
   id: string;
@@ -34,6 +34,8 @@ export default function Home() {
   const [state, setState] = useState<State | null>(null);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchSessions = async () => {
     try {
@@ -89,6 +91,13 @@ export default function Home() {
     }, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    // メッセージが更新されたら自動スクロール（autoScrollがONの場合のみ）
+    if (autoScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [currentMessages, autoScroll]);
 
   const handleControl = async (action: string, message?: string) => {
     setLoading(true);
@@ -332,13 +341,33 @@ export default function Home() {
 
         {/* Status Bar */}
         {state && !selectedSessionId && (
-          <div className="px-4 py-2 text-sm text-gray-400 bg-gray-850 border-b border-gray-700 flex gap-4">
-            <span>
-              ターン: <span className="text-yellow-400 font-medium">{state.current_turn}</span>
-            </span>
-            <span>
-              メッセージ数: <span className="text-white">{state.message_counter}</span>
-            </span>
+          <div className="px-4 py-2 text-sm text-gray-400 bg-gray-850 border-b border-gray-700 flex gap-4 justify-between items-center">
+            <div className="flex gap-4">
+              <span>
+                ターン: <span className="text-yellow-400 font-medium">{state.current_turn}</span>
+              </span>
+              <span>
+                メッセージ数: <span className="text-white">{state.message_counter}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">自動スクロール</span>
+              <button
+                onClick={() => setAutoScroll(!autoScroll)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 ${
+                  autoScroll ? 'bg-green-600 focus:ring-green-500' : 'bg-gray-600 focus:ring-gray-500'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                    autoScroll ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className={`text-xs font-medium ${autoScroll ? 'text-green-400' : 'text-gray-500'}`}>
+                {autoScroll ? 'ON' : 'OFF'}
+              </span>
+            </div>
           </div>
         )}
 
@@ -382,6 +411,7 @@ export default function Home() {
               </div>
             ))
           )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
     </div>
